@@ -115,6 +115,43 @@
 			}, 3000);
 		}
 	}
+
+	const quirkyLines = [
+		'Did you know? Mathematicians secretly love this game.',
+		'Warning: May cause sudden outbursts of joy or despair.',
+		'Rolling double sixes is not a personality trait.',
+		'Shutting the box is more satisfying than closing a browser tab.',
+		'Legend says the box never truly shuts for sore losers.',
+		'Dice not included in digital form. Please imagine them.',
+		'Pro tip: Blame the dice, not your math skills.',
+		'Fun fact: This game pairs well with snacks.',
+		'Every roll is a plot twist in disguise.',
+		'Remember: The real box was the friends we shut along the way.',
+		'If you win, bragging rights are included—free of charge.',
+		'Math teachers recommend this game for extra credit (not really).',
+		'Rolling dice is the original random number generator.',
+		'The box isn’t the only thing getting shut—so are your hopes!',
+		'Try not to shut your laptop in frustration.',
+		'Rumor has it, lucky socks improve your odds.',
+		'No boxes were harmed in the making of this game.',
+		'If at first you don’t succeed, blame the algorithm.',
+		'This game is 90% luck, 10% questionable decisions.',
+		'The dice are watching. Roll wisely.',
+		'Shut the Box: Because spreadsheets aren’t fun enough.',
+		'May your rolls be high and your sums be exact.',
+		'The only thing harder than shutting the box is explaining the rules.',
+		'If you lose, just call it a “strategic retreat.”',
+		'Box not included. Batteries not required.',
+		'Every number you shut is a small victory.',
+		'The suspense is real. The box is virtual.',
+		'You can’t cheat, but you can try.',
+		'Some say the box is a metaphor for life.',
+		'Rolling dice: the original fidget spinner.'
+	];
+
+	function getQuirkiness(): string {
+		return quirkyLines[Math.floor(Math.random() * quirkyLines.length)];
+	}
 </script>
 
 <div class="flex min-h-screen flex-col items-center justify-center bg-gray-800 py-4 text-white">
@@ -123,7 +160,7 @@
 	{/if}
 	<Modal {showModal} onNewGame={newGame} />
 	<h1 class="mb-4 text-4xl font-bold sm:text-5xl">Shut The Box</h1>
-	<p class="mb-8 text-lg">Svelte 5 + Tailwind CSS</p>
+	<p class="text-md mb-4 max-w-xs text-center sm:mb-8 sm:max-w-md sm:text-lg">{getQuirkiness()}</p>
 
 	<div class="w-full max-w-4xl rounded-lg bg-gray-900 p-4 shadow-lg sm:p-8">
 		<div class="mb-8 grid grid-cols-6 gap-2 sm:grid-cols-8 lg:grid-cols-12">
@@ -155,7 +192,9 @@
 			{/each}
 		</div>
 
-		<div class="relative flex flex-col space-y-4 sm:flex-row sm:justify-center sm:space-x-4 sm:space-y-0">
+		<div
+			class="relative flex flex-col space-y-4 sm:flex-row sm:justify-center sm:space-y-0 sm:space-x-4"
+		>
 			{#if !diceRolled && !gameOver}
 				<button
 					class="rounded-lg bg-green-600 px-6 py-3 text-xl font-bold text-white hover:bg-green-700"
@@ -182,7 +221,9 @@
 			</button>
 
 			<div
-				class="absolute -top-12 left-1/2 -translate-x-1/2 rounded bg-red-600 px-3 py-2 text-sm text-white shadow-md transition-opacity duration-300 {showInvalidSelectionTooltip ? 'opacity-100' : 'opacity-0 pointer-events-none'}"
+				class="absolute -top-12 left-1/2 -translate-x-1/2 rounded bg-red-600 px-3 py-2 text-sm text-white shadow-md transition-opacity duration-300 {showInvalidSelectionTooltip
+					? 'opacity-100'
+					: 'pointer-events-none opacity-0'}"
 			>
 				Selected numbers must equal the dice roll.
 			</div>
