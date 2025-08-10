@@ -3,6 +3,8 @@
 	import favicon from '$lib/assets/favicon.svg';
 
 	let { children } = $props();
+
+	export const prerender = true; // Enable prerendering for this layout
 </script>
 
 <svelte:head>

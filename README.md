@@ -31,3 +31,7 @@ To run the project locally, you will need to have Node.js and pnpm installed. Th
 ## Copyright
 
 "Shut The Box" is a traditional pub game. While the exact origin and copyright status are unclear, it is widely considered to be in the public domain. This implementation is for educational and entertainment purposes only.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
