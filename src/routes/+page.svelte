@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { flip } from 'svelte/animate';
 	import { quintOut } from 'svelte/easing';
+	import { fade } from 'svelte/transition';
 	import Confetti from 'svelte-confetti';
 	import Modal from '$lib/Modal.svelte';
 
@@ -16,6 +17,7 @@
 	let rolling = false;
 	let showConfetti = false;
 	let showModal = false;
+	let showInvalidSelectionTooltip = false;
 
 	function rollDiceWithAnimation() {
 		rolling = true;
@@ -42,6 +44,7 @@
 		gameOver = false;
 		showConfetti = false;
 		showModal = false;
+		showInvalidSelectionTooltip = false;
 	}
 
 	function rollDice() {
@@ -106,7 +109,10 @@
 				}, 3000);
 			}
 		} else {
-			alert('Selected numbers must equal the dice roll.');
+			showInvalidSelectionTooltip = true;
+			setTimeout(() => {
+				showInvalidSelectionTooltip = false;
+			}, 3000);
 		}
 	}
 </script>
@@ -149,7 +155,7 @@
 			{/each}
 		</div>
 
-		<div class="flex flex-col space-y-4 sm:flex-row sm:justify-center sm:space-y-0 sm:space-x-4">
+		<div class="relative flex flex-col space-y-4 sm:flex-row sm:justify-center sm:space-x-4 sm:space-y-0">
 			{#if !diceRolled && !gameOver}
 				<button
 					class="rounded-lg bg-green-600 px-6 py-3 text-xl font-bold text-white hover:bg-green-700"
@@ -174,6 +180,12 @@
 			>
 				New Game
 			</button>
+
+			<div
+				class="absolute -top-12 left-1/2 -translate-x-1/2 rounded bg-red-600 px-3 py-2 text-sm text-white shadow-md transition-opacity duration-300 {showInvalidSelectionTooltip ? 'opacity-100' : 'opacity-0 pointer-events-none'}"
+			>
+				Selected numbers must equal the dice roll.
+			</div>
 		</div>
 	</div>
 
