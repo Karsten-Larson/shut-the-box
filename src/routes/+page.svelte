@@ -18,6 +18,10 @@
 	let showConfetti = false;
 	let showModal = false;
 	let showInvalidSelectionTooltip = false;
+	let strikes = 0;
+	const maxStrikes = 3;
+	let modalTitle = '';
+	let modalMessage = '';
 
 	function rollDiceWithAnimation() {
 		rolling = true;
@@ -45,6 +49,7 @@
 		showConfetti = false;
 		showModal = false;
 		showInvalidSelectionTooltip = false;
+		strikes = 0;
 	}
 
 	function rollDice() {
@@ -70,8 +75,14 @@
 		}
 
 		if (!canMakeMove) {
-			score = openNumbers.reduce((a, b) => a + b, 0);
-			gameOver = true;
+			strikes++;
+			if (strikes >= maxStrikes) {
+				score = openNumbers.reduce((a, b) => a + b, 0);
+				gameOver = true;
+				showGameOverModal();
+			} else {
+				diceRolled = false;
+			}
 		}
 	}
 
@@ -102,11 +113,7 @@
 			if (numbers.every((n) => !n.active)) {
 				gameOver = true;
 				score = 0;
-				showConfetti = true;
-				setTimeout(() => {
-					showConfetti = false;
-					showModal = true;
-				}, 3000);
+				showWinModal();
 			}
 		} else {
 			showInvalidSelectionTooltip = true;
@@ -114,6 +121,26 @@
 				showInvalidSelectionTooltip = false;
 			}, 3000);
 		}
+	}
+
+	function showWinModal() {
+		modalTitle = 'You Win!';
+		let message = 'Congratulations, you shut the box!';
+		if (strikes > 0) {
+			message += `<br><span class="text-lg text-gray-400">You used ${strikes} strike(s).</span>`;
+		}
+		modalMessage = message;
+		showConfetti = true;
+		setTimeout(() => {
+			showConfetti = false;
+			showModal = true;
+		}, 3000);
+	}
+
+	function showGameOverModal() {
+		modalTitle = 'Game Over!';
+		modalMessage = `Your score is ${score}`;
+		showModal = true;
 	}
 
 	const quirkyLines = [
@@ -154,11 +181,22 @@
 	}
 </script>
 
-<div class="flex min-h-screen flex-col items-center justify-center bg-gray-800 py-4 text-white">
+<div
+	class="flex min-h-screen flex-col items-center justify-center overflow-x-hidden bg-gray-800 py-4 text-white"
+>
 	{#if showConfetti}
-		<Confetti />
+		<div class="z-50">
+			<Confetti
+				amount={250}
+				size={window.innerWidth < 640 ? 25 : 75}
+				x={window.innerWidth < 640 ? [-2.5, 2.5] : [-8, 8]}
+				y={window.innerWidth < 640 ? [0.75, -1] : [1, -1.25]}
+				fallDistance={'75vh'}
+				duration={3000}
+			/>
+		</div>
 	{/if}
-	<Modal {showModal} onNewGame={newGame} />
+	<Modal {showModal} onNewGame={newGame} title={modalTitle} message={modalMessage} />
 	<h1 class="mb-4 text-4xl font-bold sm:text-5xl">Shut The Box</h1>
 	<p class="text-md mb-4 max-w-xs text-center sm:mb-8 sm:max-w-md sm:text-lg">{getQuirkiness()}</p>
 
@@ -228,14 +266,19 @@
 				Selected numbers must equal the dice roll.
 			</div>
 		</div>
-	</div>
-
-	{#if gameOver && !showModal}
-		<div class="mt-8 text-center">
-			<h2 class="mb-2 text-4xl font-bold">{score === 0 ? 'You Win!' : 'Game Over!'}</h2>
-			<p class="text-2xl">{score === 0 ? 'You shut the box!' : `Your score is ${score}`}</p>
+		<div class="mt-4 flex justify-center space-x-2">
+			{#each Array(maxStrikes) as _, i}
+				<div
+					class="flex h-8 w-8 items-center justify-center rounded-md text-xl font-bold text-white {i <
+					strikes
+						? 'bg-red-600'
+						: 'bg-gray-600'}"
+				>
+					{#if i < strikes}X{/if}
+				</div>
+			{/each}
 		</div>
-	{/if}
+	</div>
 
 	<div class="mt-8 w-full max-w-4xl rounded-lg bg-gray-900 p-4 shadow-lg sm:p-8">
 		<h2 class="mb-4 text-3xl font-bold">Rules of Shut The Box</h2>
@@ -253,8 +296,9 @@
 			</li>
 			<li>The goal is to make all numbers unavailable. If you do, you win!</li>
 			<li>
-				If you cannot make a move with the available numbers, the game is over. Your score is the
-				sum of the numbers that are still available. A lower score is better.
+				If you cannot make a move with the available numbers, you get a strike. The game ends after
+				3 strikes. Your score is the sum of the numbers that are still available. A lower score is
+				better.
 			</li>
 		</ul>
 	</div>
