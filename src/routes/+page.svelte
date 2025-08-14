@@ -3,33 +3,45 @@
 	import Confetti from 'svelte-confetti';
 	import Modal from '$lib/Modal.svelte';
 	import Die from '$lib/Die.svelte';
+	import Settings from '$lib/Settings.svelte';
+
+	let numberOfDice = $state(2);
+	let maxStrikes = $state(3);
+
+	// Effect hook that triggers the newGame function whenever the values of
+	// numberOfDice or maxStrikes change. This ensures that a new game is started
+	// with the updated configuration whenever these dependencies are modified.
+	$effect(() => {
+		numberOfDice;
+		maxStrikes;
+		newGame();
+	});
 
 	let numbers = $state(
-		Array.from({ length: 12 }, (_, i) => ({
+		Array.from({ length: numberOfDice * 6 }, (_, i) => ({
 			value: i + 1,
 			active: true
 		}))
 	);
-	let dice: number[] = $state([0, 0]);
+	let dice: number[] = $state(Array(numberOfDice).fill(0));
 	let diceRolled = $state(false);
 	let rolling = $state(false);
 	let selectedNumbers: number[] = $state([]);
-	let score = 0;
+	let score = $state(0);
 	let gameOver = $state(false);
 	let showConfetti = $state(false);
 	let showModal = $state(false);
 	let showInvalidSelectionTooltip = $state(false);
 	let strikes = $state(0);
-	const maxStrikes = 3;
 	let modalTitle = $state('');
 	let modalMessage = $state('');
 
 	function newGame() {
-		numbers = Array.from({ length: 12 }, (_, i) => ({
+		numbers = Array.from({ length: numberOfDice * 6 }, (_, i) => ({
 			value: i + 1,
 			active: true
 		}));
-		dice = [0, 0];
+		dice = Array(numberOfDice).fill(0);
 		diceRolled = false;
 		rolling = false;
 		selectedNumbers = [];
@@ -42,14 +54,13 @@
 	}
 
 	function rollDice() {
-		dice = [Math.floor(Math.random() * 6) + 1, Math.floor(Math.random() * 6) + 1];
+		dice = Array.from({ length: numberOfDice }, () => Math.floor(Math.random() * 6) + 1);
 		rolling = true;
 		selectedNumbers = [];
 
 		setTimeout(() => {
 			diceRolled = true;
 			rolling = false;
-			console.log(rolling);
 
 			const openNumbers = numbers.filter((n) => n.active).map((n) => n.value);
 			const diceSum = dice.reduce((a, b) => a + b, 0);
@@ -291,5 +302,9 @@
 				better.
 			</li>
 		</ul>
+	</div>
+
+	<div class="mt-8 w-full max-w-4xl rounded-lg bg-gray-900 p-4 shadow-lg sm:p-8">
+		<Settings bind:numberOfDice bind:maxStrikes />
 	</div>
 </div>
