@@ -1,48 +1,37 @@
 <script lang="ts">
-	import { flip } from 'svelte/animate';
-	import { quintOut } from 'svelte/easing';
 	import { fade } from 'svelte/transition';
 	import Confetti from 'svelte-confetti';
 	import Modal from '$lib/Modal.svelte';
+	import Die from '$lib/Die.svelte';
 
-	let numbers = Array.from({ length: 12 }, (_, i) => ({
-		value: i + 1,
-		active: true
-	}));
-	let dice = [1, 1];
-	let diceRolled = false;
-	let selectedNumbers: number[] = [];
+	let numbers = $state(
+		Array.from({ length: 12 }, (_, i) => ({
+			value: i + 1,
+			active: true
+		}))
+	);
+	let dice: number[] = $state([0, 0]);
+	let diceRolled = $state(false);
+	let rolling = $state(false);
+	let selectedNumbers: number[] = $state([]);
 	let score = 0;
-	let gameOver = false;
-	let rolling = false;
-	let showConfetti = false;
-	let showModal = false;
-	let showInvalidSelectionTooltip = false;
-	let strikes = 0;
+	let gameOver = $state(false);
+	let showConfetti = $state(false);
+	let showModal = $state(false);
+	let showInvalidSelectionTooltip = $state(false);
+	let strikes = $state(0);
 	const maxStrikes = 3;
-	let modalTitle = '';
-	let modalMessage = '';
-
-	function rollDiceWithAnimation() {
-		rolling = true;
-		const interval = setInterval(() => {
-			dice = [Math.floor(Math.random() * 6) + 1, Math.floor(Math.random() * 6) + 1];
-		}, 50);
-
-		setTimeout(() => {
-			clearInterval(interval);
-			rollDice();
-			rolling = false;
-		}, 1000);
-	}
+	let modalTitle = $state('');
+	let modalMessage = $state('');
 
 	function newGame() {
 		numbers = Array.from({ length: 12 }, (_, i) => ({
 			value: i + 1,
 			active: true
 		}));
-		dice = [1, 1];
+		dice = [0, 0];
 		diceRolled = false;
+		rolling = false;
 		selectedNumbers = [];
 		score = 0;
 		gameOver = false;
@@ -54,36 +43,42 @@
 
 	function rollDice() {
 		dice = [Math.floor(Math.random() * 6) + 1, Math.floor(Math.random() * 6) + 1];
-		diceRolled = true;
+		rolling = true;
 		selectedNumbers = [];
 
-		const openNumbers = numbers.filter((n) => n.active).map((n) => n.value);
-		const diceSum = dice[0] + dice[1];
+		setTimeout(() => {
+			diceRolled = true;
+			rolling = false;
+			console.log(rolling);
 
-		let canMakeMove = false;
-		for (let i = 1; i < 1 << openNumbers.length; i++) {
-			let subset = [];
-			for (let j = 0; j < openNumbers.length; j++) {
-				if ((i >> j) & 1) {
-					subset.push(openNumbers[j]);
+			const openNumbers = numbers.filter((n) => n.active).map((n) => n.value);
+			const diceSum = dice.reduce((a, b) => a + b, 0);
+
+			let canMakeMove = false;
+			for (let i = 1; i < 1 << openNumbers.length; i++) {
+				let subset = [];
+				for (let j = 0; j < openNumbers.length; j++) {
+					if ((i >> j) & 1) {
+						subset.push(openNumbers[j]);
+					}
+				}
+				if (subset.reduce((a, b) => a + b, 0) === diceSum) {
+					canMakeMove = true;
+					break;
 				}
 			}
-			if (subset.reduce((a, b) => a + b, 0) === diceSum) {
-				canMakeMove = true;
-				break;
-			}
-		}
 
-		if (!canMakeMove) {
-			strikes++;
-			if (strikes >= maxStrikes) {
-				score = openNumbers.reduce((a, b) => a + b, 0);
-				gameOver = true;
-				showGameOverModal();
-			} else {
-				diceRolled = false;
+			if (!canMakeMove) {
+				strikes++;
+				if (strikes >= maxStrikes) {
+					score = openNumbers.reduce((a, b) => a + b, 0);
+					gameOver = true;
+					showGameOverModal();
+				} else {
+					diceRolled = false;
+				}
 			}
-		}
+		}, 1000); // Simulate rolling animation for 1 second
 	}
 
 	function toggleNumber(value: number) {
@@ -98,7 +93,7 @@
 
 	function shutTheBox() {
 		const selectedSum = selectedNumbers.reduce((a, b) => a + b, 0);
-		const diceSum = dice[0] + dice[1];
+		const diceSum = dice.reduce((a, b) => a + b, 0);
 
 		if (selectedSum === diceSum) {
 			numbers = numbers.map((n) => {
@@ -211,7 +206,7 @@
 					)
 						? 'ring-4 ring-yellow-400'
 						: ''}"
-					on:click={() => toggleNumber(number.value)}
+					onclick={() => toggleNumber(number.value)}
 					disabled={!number.active}
 				>
 					{number.value}
@@ -220,13 +215,8 @@
 		</div>
 
 		<div class="mb-8 flex items-center justify-center">
-			{#each dice as die, index (index)}
-				<div
-					class="mr-4 flex h-16 w-16 items-center justify-center rounded-lg border-4 border-gray-500 bg-white text-4xl font-bold text-gray-900 sm:h-20 sm:w-20 sm:text-5xl"
-					animate:flip={{ duration: 150, easing: quintOut }}
-				>
-					{die}
-				</div>
+			{#each dice as die, i (i)}
+				<Die number={die} {rolling} />
 			{/each}
 		</div>
 
@@ -236,7 +226,7 @@
 			{#if !diceRolled && !gameOver}
 				<button
 					class="rounded-lg bg-green-600 px-6 py-3 text-xl font-bold text-white hover:bg-green-700"
-					on:click={rollDiceWithAnimation}
+					onclick={rollDice}
 					disabled={rolling}
 				>
 					{#if rolling}Rolling...{:else}Roll Dice{/if}
@@ -244,7 +234,7 @@
 			{:else if !gameOver}
 				<button
 					class="rounded-lg bg-yellow-500 px-6 py-3 text-xl font-bold text-white hover:bg-yellow-600"
-					on:click={shutTheBox}
+					onclick={shutTheBox}
 					disabled={selectedNumbers.length === 0}
 				>
 					Shut The Box
@@ -253,7 +243,7 @@
 
 			<button
 				class="rounded-lg bg-gray-600 px-6 py-3 text-xl font-bold text-white hover:bg-gray-700"
-				on:click={newGame}
+				onclick={newGame}
 			>
 				New Game
 			</button>
